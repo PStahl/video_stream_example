@@ -16,6 +16,7 @@
 import requests
 import socket
 import json
+import time
 
 from flask import Flask, render_template, Response, request
 from camera import VideoCamera
@@ -41,6 +42,7 @@ def gen(url, filename):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+    #host = "10.3.63.255"
     host = "localhost"
     port = 8090
 
@@ -56,12 +58,9 @@ def gen(url, filename):
     sock.sendto(data, (remote_address, remote_port))
 
     log.info("Listeneing on {}:{}".format(host, port))
-    print log
-    print log.level
-    print log.info("here!")
-    print "\n---"
 
     last_shown = -1
+    last_showed = None
     receivers = set()
     while True:
         conn, addr = s.accept()
@@ -82,9 +81,19 @@ def gen(url, filename):
             s.close()
             return
         elif data and data['frame_count'] > last_shown:
-            log.debug("Received frame {} from {}".format(
-                data['frame_count'], data['id']))
+            if not data['frame_count'] == last_shown + 1:
+                print "\n\n"
+                print last_shown, data['frame_count']
+            log.debug("Received frame {} from {}: total receivers: {}".format(
+                data['frame_count'], data['id'], len(receivers)))
 
+            FPS = 30
+            while last_showed and last_showed + (1.0 / FPS) > time.time():
+                print "{}, {}, {}".format(last_showed, last_showed + (1.0 / FPS), time.time())
+                print "sleep"
+                time.sleep(0.05)
+            last_showed = time.time()
+            #last_showed + (1.0 / FPS) if last_showed else time.time()
             last_shown = data['frame_count']
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + data['frame'].encode("latin-1") + b'\r\n\r\n')
