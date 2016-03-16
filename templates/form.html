@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title>Video Streaming Demonstration</title>
+  </head>
+  <body>
+    <form method="post" action="{{ url_for('submit') }}">
+        <label for="url">URL</label>
+        <input type="text" name="url"></input>
+        <label for="filename">Filename</label>
+        <input type="text" name="filename"></input>
+        <input type="submit"/>
+    </form>
+  </body>
+</html>
